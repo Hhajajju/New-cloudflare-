@@ -556,6 +556,23 @@ if (url.pathname === "/api/spin/save" && request.method === "POST") {
   );
 
 }
+    // Register Spin
+if (url.pathname === "/api/spin/register" && request.method === "POST") {
+
+  const data = await request.json();
+
+  return Response.json(
+    {
+      success:true,
+      spinId:data.spinId,
+      reward:data.reward
+    },
+    {
+      headers:corsHeaders
+    }
+  );
+
+}
     
     return Response.json(
       {
