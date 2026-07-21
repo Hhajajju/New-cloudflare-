@@ -770,6 +770,74 @@ if (url.pathname === "/api/wallet/withdraw" && request.method === "POST") {
   );
 
 }
+    // Claim Referral Daily Bonus
+if (url.pathname === "/api/referral-daily-bonus" && request.method === "POST") {
+
+  const data = await request.json();
+
+  const telegramId = data.telegramId;
+
+  const user = await env.DB
+    .prepare(
+      "SELECT * FROM users WHERE telegramId = ?"
+    )
+    .bind(telegramId)
+    .first();
+
+
+  if (!user) {
+    return Response.json(
+      {
+        success:false,
+        message:"User not found"
+      },
+      {
+        headers:corsHeaders
+      }
+    );
+  }
+
+
+  if (user.verifiedReferrals < 10) {
+    return Response.json(
+      {
+        success:false,
+        message:"Need 10 verified referrals"
+      },
+      {
+        headers:corsHeaders
+      }
+    );
+  }
+
+
+  const reward = 200000;
+
+
+  await env.DB
+    .prepare(`
+      UPDATE users
+      SET coinBalance = coinBalance + ?
+      WHERE telegramId = ?
+    `)
+    .bind(
+      reward,
+      telegramId
+    )
+    .run();
+
+
+  return Response.json(
+    {
+      success:true,
+      reward
+    },
+    {
+      headers:corsHeaders
+    }
+  );
+
+}
     return Response.json(
       {
         error: "Route not found",
