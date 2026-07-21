@@ -943,11 +943,14 @@ if (url.pathname === "/api/tasks/claim" && request.method === "POST") {
   );
 
 }
-    // Claim AdsGram Daily Reward
+    
+
+  // Claim AdsGram Daily Reward
 if (url.pathname === "/api/adsgram/claim" && request.method === "POST") {
 
   const data = await request.json();
   const telegramId = data.telegramId;
+
 
   const progress = await env.DB
     .prepare(
@@ -956,37 +959,44 @@ if (url.pathname === "/api/adsgram/claim" && request.method === "POST") {
     .bind(telegramId)
     .first();
 
+
   if (!progress || progress.dailyCount < 30) {
-    return Response.json({
-      success:false,
-      message:"Complete 30 AdsGram tasks first"
-    },{
-      headers:corsHeaders
-    });
+    return Response.json(
+      {
+        success:false,
+        message:"Complete 30 AdsGram tasks first"
+      },
+      {
+        headers:corsHeaders
+      }
+    );
   }
 
 
-  const rewardGram = 0.10;
+  // Daily AdsGram bonus = 30,000 Coins
+  const rewardCoins = 30000;
+
   const now = new Date().toISOString();
 
 
   await env.DB
     .prepare(`
       UPDATE users
-      SET gramBalance = gramBalance + ?
+      SET coinBalance = coinBalance + ?
       WHERE telegramId = ?
     `)
     .bind(
-      rewardGram,
+      rewardCoins,
       telegramId
     )
     .run();
 
 
+  // Reset AdsGram progress after claiming
   await env.DB
     .prepare(`
       UPDATE adsgram_progress
-      SET 
+      SET
       dailyCount = 0,
       lastClaim = ?
       WHERE telegramId = ?
@@ -998,12 +1008,16 @@ if (url.pathname === "/api/adsgram/claim" && request.method === "POST") {
     .run();
 
 
-  return Response.json({
-    success:true,
-    reward:rewardGram
-  },{
-    headers:corsHeaders
-  });
+  return Response.json(
+    {
+      success:true,
+      reward:rewardCoins,
+      type:"coins"
+    },
+    {
+      headers:corsHeaders
+    }
+  );
 
 }
     return Response.json(
