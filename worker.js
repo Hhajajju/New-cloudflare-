@@ -163,6 +163,56 @@ if (url.pathname === "/api/notifications" && request.method === "GET") {
     }
   );
 }
+    // Admin Send Notification
+if (url.pathname === "/api/admin/notifications" && request.method === "POST") {
+
+  const data = await request.json();
+
+  let recipientName = "All Users";
+
+  if (data.telegramId) {
+    const user = await env.DB
+      .prepare(
+        "SELECT username FROM users WHERE telegramId = ?"
+      )
+      .bind(data.telegramId)
+      .first();
+
+    if (user) {
+      recipientName = user.username;
+    }
+  }
+
+  await env.DB
+    .prepare(`
+      INSERT INTO notifications
+      (
+        id,
+        recipientId,
+        recipientName,
+        message,
+        timestamp
+      )
+      VALUES (?, ?, ?, ?, ?)
+    `)
+    .bind(
+      crypto.randomUUID(),
+      data.telegramId || "all",
+      recipientName,
+      data.message,
+      new Date().toISOString()
+    )
+    .run();
+
+  return Response.json(
+    {
+      success: true
+    },
+    {
+      headers: corsHeaders
+    }
+  );
+}
     return Response.json(
       {
         error: "Route not found",
