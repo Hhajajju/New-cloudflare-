@@ -273,6 +273,79 @@ if (url.pathname === "/api/tasks/verify" && request.method === "POST") {
     }
   );
 }
+// Verify AdsGram Task
+if (url.pathname === "/api/verify-adsgram-task" && request.method === "POST") {
+
+  const data = await request.json();
+
+  const telegramId = data.telegramId;
+  const blockId = data.blockId;
+
+  if (!telegramId || !blockId) {
+    return Response.json(
+      {
+        success:false,
+        message:"Missing data"
+      },
+      {
+        headers:corsHeaders
+      }
+    );
+  }
+
+
+  // Check user exists
+  const user = await env.DB
+    .prepare(
+      "SELECT * FROM users WHERE telegramId = ?"
+    )
+    .bind(telegramId)
+    .first();
+
+
+  if (!user) {
+    return Response.json(
+      {
+        success:false,
+        message:"User not found"
+      },
+      {
+        headers:corsHeaders
+      }
+    );
+  }
+
+
+  const reward = 3000;
+
+
+  await env.DB
+    .prepare(
+      `
+      UPDATE users
+      SET 
+      coinBalance = coinBalance + ?
+      WHERE telegramId = ?
+      `
+    )
+    .bind(
+      reward,
+      telegramId
+    )
+    .run();
+
+
+  return Response.json(
+    {
+      success:true,
+      reward:reward,
+      blockId:blockId
+    },
+    {
+      headers:corsHeaders
+    }
+  );
+}
     
     return Response.json(
       {
