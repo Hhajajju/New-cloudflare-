@@ -659,6 +659,117 @@ if (url.pathname === "/api/convert" && request.method === "POST") {
   );
 
 } 
+    // Withdraw Gram
+if (url.pathname === "/api/wallet/withdraw" && request.method === "POST") {
+
+  const data = await request.json();
+
+  const telegramId = data.telegramId;
+  const amount = Number(data.amount);
+  const walletAddress = data.walletAddress;
+
+
+  const user = await env.DB
+    .prepare(
+      "SELECT * FROM users WHERE telegramId = ?"
+    )
+    .bind(telegramId)
+    .first();
+
+
+  if (!user) {
+    return Response.json(
+      {
+        success:false,
+        message:"User not found"
+      },
+      {
+        headers:corsHeaders
+      }
+    );
+  }
+
+
+  if (user.gramBalance < amount) {
+    return Response.json(
+      {
+        success:false,
+        message:"Not enough Gram"
+      },
+      {
+        headers:corsHeaders
+      }
+    );
+  }
+
+
+  const fee = amount * 0.10;
+  const netAmount = amount - fee;
+
+
+  const id = crypto.randomUUID();
+
+
+  await env.DB
+    .prepare(`
+      INSERT INTO withdrawals
+      (
+        id,
+        userId,
+        username,
+        amount,
+        fee,
+        netAmount,
+        tonAddress,
+        status,
+        createdAt
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `)
+    .bind(
+      id,
+      telegramId,
+      user.username,
+      amount,
+      fee,
+      netAmount,
+      walletAddress,
+      "pending",
+      new Date().toISOString()
+    )
+    .run();
+
+
+  await env.DB
+    .prepare(`
+      UPDATE users
+      SET gramBalance = gramBalance - ?
+      WHERE telegramId = ?
+    `)
+    .bind(
+      amount,
+      telegramId
+    )
+    .run();
+
+
+  return Response.json(
+    {
+      success:true,
+      withdrawal:{
+        id,
+        amount,
+        fee,
+        netAmount,
+        status:"pending"
+      }
+    },
+    {
+      headers:corsHeaders
+    }
+  );
+
+}
     return Response.json(
       {
         error: "Route not found",
