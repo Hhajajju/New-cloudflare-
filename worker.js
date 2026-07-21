@@ -943,6 +943,69 @@ if (url.pathname === "/api/tasks/claim" && request.method === "POST") {
   );
 
 }
+    // Claim AdsGram Daily Reward
+if (url.pathname === "/api/adsgram/claim" && request.method === "POST") {
+
+  const data = await request.json();
+  const telegramId = data.telegramId;
+
+  const progress = await env.DB
+    .prepare(
+      "SELECT * FROM adsgram_progress WHERE telegramId = ?"
+    )
+    .bind(telegramId)
+    .first();
+
+  if (!progress || progress.dailyCount < 30) {
+    return Response.json({
+      success:false,
+      message:"Complete 30 AdsGram tasks first"
+    },{
+      headers:corsHeaders
+    });
+  }
+
+
+  const rewardGram = 0.10;
+  const now = new Date().toISOString();
+
+
+  await env.DB
+    .prepare(`
+      UPDATE users
+      SET gramBalance = gramBalance + ?
+      WHERE telegramId = ?
+    `)
+    .bind(
+      rewardGram,
+      telegramId
+    )
+    .run();
+
+
+  await env.DB
+    .prepare(`
+      UPDATE adsgram_progress
+      SET 
+      dailyCount = 0,
+      lastClaim = ?
+      WHERE telegramId = ?
+    `)
+    .bind(
+      now,
+      telegramId
+    )
+    .run();
+
+
+  return Response.json({
+    success:true,
+    reward:rewardGram
+  },{
+    headers:corsHeaders
+  });
+
+}
     return Response.json(
       {
         error: "Route not found",
