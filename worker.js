@@ -29,7 +29,69 @@ export default {
         }
       );
     }
+// User Login / Register
+if (url.pathname === "/api/login" && request.method === "POST") {
 
+  const data = await request.json();
+
+  const existing = await env.DB
+    .prepare(
+      "SELECT * FROM users WHERE telegramId = ?"
+    )
+    .bind(data.telegramId)
+    .first();
+
+
+  if (existing) {
+    return Response.json(existing, {
+      headers: corsHeaders
+    });
+  }
+
+
+  await env.DB
+    .prepare(`
+      INSERT INTO users
+      (
+        telegramId,
+        username,
+        profilePhoto,
+        coinBalance,
+        gramBalance,
+        referredBy,
+        verifiedReferrals,
+        blocked,
+        createdAt
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `)
+    .bind(
+      data.telegramId,
+      data.username || "Telegram User",
+      data.photoUrl || "",
+      0,
+      0,
+      data.referrerId || null,
+      0,
+      0,
+      new Date().toISOString()
+    )
+    .run();
+
+
+  const user = await env.DB
+    .prepare(
+      "SELECT * FROM users WHERE telegramId = ?"
+    )
+    .bind(data.telegramId)
+    .first();
+
+
+  return Response.json(user, {
+    headers: corsHeaders
+  });
+
+}
 
     return Response.json(
       {
