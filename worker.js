@@ -1020,6 +1020,30 @@ if (url.pathname === "/api/adsgram/claim" && request.method === "POST") {
   );
 
 }
+    // Get AdsGram Progress
+if (url.pathname === "/api/adsgram/progress" && request.method === "GET") {
+
+  const telegramId = url.searchParams.get("telegramId");
+
+  const progress = await env.DB
+    .prepare(
+      "SELECT * FROM adsgram_progress WHERE telegramId = ?"
+    )
+    .bind(telegramId)
+    .first();
+
+
+  return Response.json(
+    {
+      dailyCount: progress ? progress.dailyCount : 0,
+      required: 30
+    },
+    {
+      headers:corsHeaders
+    }
+  );
+
+}
     return Response.json(
       {
         error: "Route not found",
