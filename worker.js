@@ -273,7 +273,7 @@ if (url.pathname === "/api/tasks/verify" && request.method === "POST") {
     }
   );
 }
-// Verify AdsGram Task
+// Verify AdsGram Task + Daily Progress
 if (url.pathname === "/api/verify-adsgram-task" && request.method === "POST") {
 
   const data = await request.json();
@@ -292,6 +292,110 @@ if (url.pathname === "/api/verify-adsgram-task" && request.method === "POST") {
       }
     );
   }
+
+
+  const user = await env.DB
+    .prepare(
+      "SELECT * FROM users WHERE telegramId = ?"
+    )
+    .bind(telegramId)
+    .first();
+
+
+  if (!user) {
+    return Response.json(
+      {
+        success:false,
+        message:"User not found"
+      },
+      {
+        headers:corsHeaders
+      }
+    );
+  }
+
+
+  const reward = 3000;
+
+
+  // Add coins
+  await env.DB
+    .prepare(
+      "UPDATE users SET coinBalance = coinBalance + ? WHERE telegramId = ?"
+    )
+    .bind(reward, telegramId)
+    .run();
+
+
+  // Get progress
+  let progress = await env.DB
+    .prepare(
+      "SELECT * FROM adsgram_progress WHERE telegramId = ?"
+    )
+    .bind(telegramId)
+    .first();
+
+
+  const now = new Date().toISOString();
+
+
+  if (!progress) {
+
+    await env.DB
+      .prepare(`
+        INSERT INTO adsgram_progress
+        (
+          telegramId,
+          dailyCount,
+          lastReset,
+          lastClaim
+        )
+        VALUES (?, ?, ?, ?)
+      `)
+      .bind(
+        telegramId,
+        1,
+        now,
+        null
+      )
+      .run();
+
+  } else {
+
+    await env.DB
+      .prepare(`
+        UPDATE adsgram_progress
+        SET dailyCount = dailyCount + 1
+        WHERE telegramId = ?
+      `)
+      .bind(telegramId)
+      .run();
+
+  }
+
+
+  const updated = await env.DB
+    .prepare(
+      "SELECT * FROM adsgram_progress WHERE telegramId = ?"
+    )
+    .bind(telegramId)
+    .first();
+
+
+  return Response.json(
+    {
+      success:true,
+      reward,
+      progress: updated.dailyCount,
+      required:30
+    },
+    {
+      headers:corsHeaders
+    }
+  );
+
+}
+
 
 
   // Check user exists
