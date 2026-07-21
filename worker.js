@@ -838,6 +838,60 @@ if (url.pathname === "/api/referral-daily-bonus" && request.method === "POST") {
   );
 
 }
+    // Claim Task Reward
+if (url.pathname === "/api/tasks/claim" && request.method === "POST") {
+
+  const data = await request.json();
+
+  const telegramId = data.telegramId;
+  const taskId = data.taskId;
+
+
+  const task = await env.DB
+    .prepare(
+      "SELECT * FROM tasks WHERE taskId = ?"
+    )
+    .bind(taskId)
+    .first();
+
+
+  if (!task) {
+    return Response.json(
+      {
+        success:false,
+        message:"Task not found"
+      },
+      {
+        headers:corsHeaders
+      }
+    );
+  }
+
+
+  await env.DB
+    .prepare(`
+      UPDATE users
+      SET coinBalance = coinBalance + ?
+      WHERE telegramId = ?
+    `)
+    .bind(
+      task.reward,
+      telegramId
+    )
+    .run();
+
+
+  return Response.json(
+    {
+      success:true,
+      reward:task.reward
+    },
+    {
+      headers:corsHeaders
+    }
+  );
+
+}
     return Response.json(
       {
         error: "Route not found",
