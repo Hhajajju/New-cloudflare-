@@ -420,64 +420,34 @@ if (url.pathname === "/api/referrals" && request.method === "GET") {
 // Get Withdrawal History
 if (url.pathname === "/api/wallet/withdraw-history" && request.method === "GET") {
 
-  const telegramId = url.searchParams.get("telegramId");
-
-  const withdrawals = await env.DB
-    .prepare(`
-      SELECT *
-      FROM withdrawals
-      WHERE telegramId = ?
-      ORDER BY createdAt DESC
-    `)
-    .bind(telegramId)
-    .all();
-
-  return Response.json(
-    withdrawals.results || [],
-    {
-      headers: corsHeaders
-    }
-  );
-
-}
-    
-    // Get Withdrawal History
-if (url.pathname === "/api/wallet/withdraw-history" && request.method === "GET") {
-
-  const telegramId = url.searchParams.get("telegramId");
-
   try {
 
-    const result = await env.DB
-      .prepare(
-        "SELECT * FROM withdrawals WHERE userId = ? ORDER BY createdAt DESC"
-      )
-      .bind(telegramId)
-      .all();
-
     return Response.json(
-      result.results || [],
+      {
+        success: true
+      },
       {
         headers: corsHeaders
       }
     );
 
-  } catch(error) {
+  } catch (error) {
 
     return Response.json(
       {
-        error: "Database error",
-        details: error.message
+        error: String(error)
       },
       {
-        status:500,
-        headers:corsHeaders
+        status: 500,
+        headers: corsHeaders
       }
     );
 
   }
 
 }
+    
+    
     return Response.json(
       {
         error: "Route not found",
