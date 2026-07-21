@@ -346,6 +346,26 @@ if (url.pathname === "/api/verify-adsgram-task" && request.method === "POST") {
     }
   );
 }
+// Get Notifications
+if (url.pathname === "/api/notifications" && request.method === "GET") {
+
+  const telegramId = url.searchParams.get("telegramId");
+
+  const result = await env.DB
+    .prepare(`
+      SELECT *
+      FROM notifications
+      WHERE recipientId = ? OR recipientId = 'all'
+      ORDER BY timestamp DESC
+    `)
+    .bind(telegramId)
+    .all();
+
+  return Response.json(result.results, {
+    headers: corsHeaders
+  });
+
+}
     
     return Response.json(
       {
