@@ -229,7 +229,7 @@ if (url.pathname === "/api/tasks" && request.method === "GET") {
     }
   );
 }
-    // Verify Task
+// Verify Task
 if (url.pathname === "/api/tasks/verify" && request.method === "POST") {
 
   const data = await request.json();
@@ -247,10 +247,11 @@ if (url.pathname === "/api/tasks/verify" && request.method === "POST") {
         success:false,
         message:"Task not found"
       },
-      { headers:corsHeaders }
+      {
+        headers:corsHeaders
+      }
     );
   }
-
 
   await env.DB
     .prepare(
@@ -262,7 +263,6 @@ if (url.pathname === "/api/tasks/verify" && request.method === "POST") {
     )
     .run();
 
-
   return Response.json(
     {
       success:true,
@@ -273,6 +273,7 @@ if (url.pathname === "/api/tasks/verify" && request.method === "POST") {
     }
   );
 }
+    
     return Response.json(
       {
         error: "Route not found",
