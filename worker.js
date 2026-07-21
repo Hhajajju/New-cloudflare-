@@ -446,7 +446,42 @@ if (url.pathname === "/api/wallet/withdraw-history" && request.method === "GET")
   }
 
 }
-    
+    // Leaderboard
+if (url.pathname === "/api/leaderboard" && request.method === "GET") {
+
+  const users = await env.DB
+    .prepare(`
+      SELECT
+        username,
+        verifiedReferrals
+      FROM users
+      ORDER BY verifiedReferrals DESC
+      LIMIT 10
+    `)
+    .all();
+
+  const leaderboard = users.results.map((user, index) => ({
+    rank: index + 1,
+    username: user.username,
+    verifiedReferrals: user.verifiedReferrals,
+    rewardText:
+      index === 0 ? "25 Gram" :
+      index === 1 ? "15 Gram" :
+      index === 2 ? "10 Gram" :
+      index === 3 ? "5 Gram" :
+      index === 4 ? "4 Gram" :
+      index === 5 ? "3 Gram" :
+      index === 6 ? "2 Gram" :
+      index === 7 ? "1.5 Gram" :
+      index === 8 ? "1 Gram" :
+      "0.5 Gram"
+  }));
+
+  return Response.json(leaderboard, {
+    headers: corsHeaders
+  });
+
+}
     
     return Response.json(
       {
