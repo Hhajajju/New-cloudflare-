@@ -440,6 +440,43 @@ if (url.pathname === "/api/wallet/withdraw-history" && request.method === "GET")
   );
 
 }
+    // Get Withdrawal History
+if (url.pathname === "/api/wallet/withdraw-history" && request.method === "GET") {
+
+  const telegramId = url.searchParams.get("telegramId");
+
+  try {
+
+    const withdrawals = await env.DB
+      .prepare(
+        "SELECT * FROM withdrawals WHERE userId = ? ORDER BY createdAt DESC"
+      )
+      .bind(telegramId)
+      .all();
+
+    return Response.json(
+      withdrawals.results || [],
+      {
+        headers: corsHeaders
+      }
+    );
+
+  } catch(error) {
+
+    return Response.json(
+      {
+        error: "Database error",
+        details: error.message
+      },
+      {
+        status: 500,
+        headers: corsHeaders
+      }
+    );
+
+  }
+
+}
     
     return Response.json(
       {
