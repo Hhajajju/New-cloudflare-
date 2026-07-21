@@ -482,7 +482,31 @@ if (url.pathname === "/api/leaderboard" && request.method === "GET") {
   });
 
 }
-t
+
+    // Get Spin History
+if (url.pathname === "/api/spin/history" && request.method === "GET") {
+
+  const telegramId = url.searchParams.get("telegramId");
+
+  const spins = await env.DB
+    .prepare(
+      "SELECT * FROM spin_history WHERE telegramId = ? ORDER BY createdAt DESC"
+    )
+    .bind(telegramId)
+    .all();
+
+  return Response.json(
+    {
+      history: spins.results || [],
+      spinsUsed: (spins.results || []).length,
+      remainingSpins: Math.max(0, 10 - (spins.results || []).length)
+    },
+    {
+      headers: corsHeaders
+    }
+  );
+
+}
     
     return Response.json(
       {
