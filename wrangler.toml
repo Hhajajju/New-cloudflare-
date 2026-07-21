@@ -1,3 +1,8 @@
 name = "newcloudflare"
 main = "worker.js"
 compatibility_date = "2026-07-21"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "gram-quest-db-new"
+database_id = "28ac8795-4cae-4816-8a03-89782a650b2e"
