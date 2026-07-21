@@ -124,7 +124,25 @@ if (url.pathname.startsWith("/api/users/") && request.method === "GET") {
 
   }
 }
+// Get User Notifications
+if (url.pathname === "/api/notifications" && request.method === "GET") {
 
+  const telegramId = url.searchParams.get("telegramId");
+
+  const notifications = await env.DB
+    .prepare(
+      "SELECT * FROM notifications WHERE recipientId = ? OR recipientId = 'all' ORDER BY timestamp DESC"
+    )
+    .bind(telegramId)
+    .all();
+
+  return Response.json(
+    notifications.results,
+    {
+      headers: corsHeaders
+    }
+  );
+}
     return Response.json(
       {
         error: "Route not found",
