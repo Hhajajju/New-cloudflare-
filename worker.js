@@ -213,6 +213,22 @@ if (url.pathname === "/api/admin/notifications" && request.method === "POST") {
     }
   );
 }
+    // Get Tasks
+if (url.pathname === "/api/tasks" && request.method === "GET") {
+
+  const tasks = await env.DB
+    .prepare(
+      "SELECT * FROM tasks WHERE active = 1"
+    )
+    .all();
+
+  return Response.json(
+    tasks.results,
+    {
+      headers: corsHeaders
+    }
+  );
+}
     return Response.json(
       {
         error: "Route not found",
