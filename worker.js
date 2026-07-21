@@ -366,6 +366,23 @@ if (url.pathname === "/api/notifications" && request.method === "GET") {
   });
 
 }
+// Get Settings
+if (url.pathname === "/api/settings" && request.method === "GET") {
+
+  const settings = await env.DB
+    .prepare(
+      "SELECT data FROM settings WHERE id='main'"
+    )
+    .first();
+
+  return Response.json(
+    JSON.parse(settings.data),
+    {
+      headers:corsHeaders
+    }
+  );
+
+}
     
     return Response.json(
       {
