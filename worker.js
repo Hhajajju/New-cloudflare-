@@ -229,6 +229,50 @@ if (url.pathname === "/api/tasks" && request.method === "GET") {
     }
   );
 }
+    // Verify Task
+if (url.pathname === "/api/tasks/verify" && request.method === "POST") {
+
+  const data = await request.json();
+
+  const task = await env.DB
+    .prepare(
+      "SELECT * FROM tasks WHERE taskId = ?"
+    )
+    .bind(data.taskId)
+    .first();
+
+  if (!task) {
+    return Response.json(
+      {
+        success:false,
+        message:"Task not found"
+      },
+      { headers:corsHeaders }
+    );
+  }
+
+
+  await env.DB
+    .prepare(
+      "UPDATE users SET coinBalance = coinBalance + ? WHERE telegramId = ?"
+    )
+    .bind(
+      task.reward,
+      data.telegramId
+    )
+    .run();
+
+
+  return Response.json(
+    {
+      success:true,
+      reward:task.reward
+    },
+    {
+      headers:corsHeaders
+    }
+  );
+}
     return Response.json(
       {
         error: "Route not found",
