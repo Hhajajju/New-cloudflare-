@@ -482,6 +482,7 @@ if (url.pathname === "/api/leaderboard" && request.method === "GET") {
   });
 
 }
+t
     
     return Response.json(
       {
