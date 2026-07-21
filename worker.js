@@ -507,6 +507,55 @@ if (url.pathname === "/api/spin/history" && request.method === "GET") {
   );
 
 }
+// Save Spin Wheel History
+if (url.pathname === "/api/spin/save" && request.method === "POST") {
+
+  const data = await request.json();
+
+  await env.DB
+    .prepare(`
+      INSERT INTO spin_history
+      (
+        id,
+        telegramId,
+        reward,
+        createdAt
+      )
+      VALUES (?, ?, ?, ?)
+    `)
+    .bind(
+      crypto.randomUUID(),
+      data.telegramId,
+      data.reward,
+      new Date().toISOString()
+    )
+    .run();
+
+
+  await env.DB
+    .prepare(`
+      UPDATE users
+      SET coinBalance = coinBalance + ?
+      WHERE telegramId = ?
+    `)
+    .bind(
+      data.reward,
+      data.telegramId
+    )
+    .run();
+
+
+  return Response.json(
+    {
+      success:true,
+      reward:data.reward
+    },
+    {
+      headers:corsHeaders
+    }
+  );
+
+}
     
     return Response.json(
       {
