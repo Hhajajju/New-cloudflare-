@@ -95,27 +95,36 @@ if (url.pathname === "/api/login" && request.method === "POST") {
 // Get User
 if (url.pathname.startsWith("/api/users/") && request.method === "GET") {
 
-  const telegramId = url.pathname.split("/")[3];
+  try {
+    const telegramId = url.pathname.split("/")[3];
 
-  const user = await env.DB
-    .prepare(
-      "SELECT * FROM users WHERE telegramId = ?"
-    )
-    .bind(telegramId)
-    .first();
+    const user = await env.DB
+      .prepare("SELECT * FROM users WHERE telegramId = ?")
+      .bind(telegramId)
+      .first();
 
-  if (!user) {
+    if (!user) {
+      return Response.json(
+        { error: "User not found" },
+        { status: 404 }
+      );
+    }
+
+    return Response.json(user);
+
+  } catch (error) {
+
     return Response.json(
-      { error: "User not found" },
-      { status: 404, headers: corsHeaders }
+      {
+        error: "Database error",
+        details: error.message
+      },
+      { status: 500 }
     );
-  }
 
-  return Response.json(
-    user,
-    { headers: corsHeaders }
-  );
+  }
 }
+
     return Response.json(
       {
         error: "Route not found",
