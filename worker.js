@@ -383,6 +383,40 @@ if (url.pathname === "/api/settings" && request.method === "GET") {
   );
 
 }
+// Get Referrals
+if (url.pathname === "/api/referrals" && request.method === "GET") {
+
+  const telegramId = url.searchParams.get("telegramId");
+
+  const referrals = await env.DB
+    .prepare(`
+      SELECT telegramId, username, createdAt
+      FROM users
+      WHERE referredBy = ?
+    `)
+    .bind(telegramId)
+    .all();
+
+
+  return Response.json(
+    {
+      totalReferrals: referrals.results.length,
+      pendingReferrals: 0,
+      verifiedReferrals: 0,
+      referralEarnings: 0,
+      referralsList: referrals.results.map(user => ({
+        telegramId: user.telegramId,
+        username: user.username,
+        status: "pending",
+        date: user.createdAt
+      }))
+    },
+    {
+      headers:corsHeaders
+    }
+  );
+
+}
     
     return Response.json(
       {
