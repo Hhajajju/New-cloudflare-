@@ -396,60 +396,7 @@ if (url.pathname === "/api/verify-adsgram-task" && request.method === "POST") {
 
 }
 
-
-
-  // Check user exists
-  const user = await env.DB
-    .prepare(
-      "SELECT * FROM users WHERE telegramId = ?"
-    )
-    .bind(telegramId)
-    .first();
-
-
-  if (!user) {
-    return Response.json(
-      {
-        success:false,
-        message:"User not found"
-      },
-      {
-        headers:corsHeaders
-      }
-    );
-  }
-
-
-  const reward = 3000;
-
-
-  await env.DB
-    .prepare(
-      `
-      UPDATE users
-      SET 
-      coinBalance = coinBalance + ?
-      WHERE telegramId = ?
-      `
-    )
-    .bind(
-      reward,
-      telegramId
-    )
-    .run();
-
-
-  return Response.json(
-    {
-      success:true,
-      reward:reward,
-      blockId:blockId
-    },
-    {
-      headers:corsHeaders
-    }
-  );
-}
+  
 // Get Notifications
 if (url.pathname === "/api/notifications" && request.method === "GET") {
 
