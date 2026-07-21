@@ -417,6 +417,29 @@ if (url.pathname === "/api/referrals" && request.method === "GET") {
   );
 
 }
+// Get Withdrawal History
+if (url.pathname === "/api/wallet/withdraw-history" && request.method === "GET") {
+
+  const telegramId = url.searchParams.get("telegramId");
+
+  const withdrawals = await env.DB
+    .prepare(`
+      SELECT *
+      FROM withdrawals
+      WHERE telegramId = ?
+      ORDER BY createdAt DESC
+    `)
+    .bind(telegramId)
+    .all();
+
+  return Response.json(
+    withdrawals.results || [],
+    {
+      headers: corsHeaders
+    }
+  );
+
+}
     
     return Response.json(
       {
