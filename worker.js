@@ -573,7 +573,92 @@ if (url.pathname === "/api/spin/register" && request.method === "POST") {
   );
 
 }
-    
+   // Convert Coins to Gram
+if (url.pathname === "/api/convert" && request.method === "POST") {
+
+  const data = await request.json();
+
+  const telegramId = data.telegramId;
+  const coins = Number(data.coins);
+
+  if (!telegramId || !coins) {
+    return Response.json(
+      {
+        success:false,
+        message:"Missing data"
+      },
+      {
+        headers:corsHeaders
+      }
+    );
+  }
+
+
+  const user = await env.DB
+    .prepare(
+      "SELECT * FROM users WHERE telegramId = ?"
+    )
+    .bind(telegramId)
+    .first();
+
+
+  if (!user) {
+    return Response.json(
+      {
+        success:false,
+        message:"User not found"
+      },
+      {
+        headers:corsHeaders
+      }
+    );
+  }
+
+
+  if (user.coinBalance < coins) {
+    return Response.json(
+      {
+        success:false,
+        message:"Not enough coins"
+      },
+      {
+        headers:corsHeaders
+      }
+    );
+  }
+
+
+  const grams = coins / 1000000;
+
+
+  await env.DB
+    .prepare(`
+      UPDATE users
+      SET
+      coinBalance = coinBalance - ?,
+      gramBalance = gramBalance + ?
+      WHERE telegramId = ?
+    `)
+    .bind(
+      coins,
+      grams,
+      telegramId
+    )
+    .run();
+
+
+  return Response.json(
+    {
+      success:true,
+      coinsDeduced:coins,
+      gramsAdded:grams
+    },
+    {
+      headers:corsHeaders
+    }
+  );
+
+} 
     return Response.json(
       {
         error: "Route not found",
